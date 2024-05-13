@@ -42,7 +42,6 @@ def send_request(request, wordlist, ignored_headers, status_filter, size_filter,
                 modified_header = f"{header_name.strip()}: {header_value.strip()}{word}"  # Remove space here
                 modified_headers[i] = modified_header
 
-                logging.info(modified_headers[i])
 
                 modified_request = '\n'.join(modified_headers)
 
@@ -56,6 +55,8 @@ def send_request(request, wordlist, ignored_headers, status_filter, size_filter,
                 # Check if the response matches any filters
                 if response.status_code in status_filter or len(response.text) in size_filter or len(response.text.splitlines()) in line_filter:
                     continue  # Skip printing the response if it's filtered
+                else:
+                	logging.info(modified_headers[i])
 
                 logging.info(f"status [{status_code}]\t{size_and_lines}")
                 if print_time:
