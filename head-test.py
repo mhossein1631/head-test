@@ -66,15 +66,6 @@ def send_request(request, wordlist, ignored_headers, status_filter, size_filter,
                 time.sleep(delay)
 
 def main():
-    des="""-r, --request <request_file>: Path to the request file.
--w, --wordlist <wordlist_file>: Path to the wordlist file.
--d, --ignored_headers <ignored_headers>: Headers to be ignored (comma-separated).
--fc, --status_filter <status_filter>: Status code filter (comma-separated).
--fs, --size_filter <size_filter>: Size filter (comma-separated).
--fl, --line_filter <line_filter>: Line number filter (comma-separated).
--delay, --delay <delay>: Delay between requests (in milliseconds).
--rate, --rate <rate>: Number of requests per second.
--time, --print_time: Print request duration."""
     parser = argparse.ArgumentParser(description='HTTP request modification script')
     parser.add_argument('-r', '--request', help='Path to the request file', required=True)
     parser.add_argument('-w', '--wordlist', help='Path to the wordlist file', required=True)
@@ -85,7 +76,6 @@ def main():
     parser.add_argument('-delay', '--delay', help='Delay between requests (in milliseconds)', type=int, default=0)
     parser.add_argument('-rate', '--rate', help='Number of requests per second', type=int, default=10)
     parser.add_argument('-time', '--print_time', help='Print request duration', action='store_true')
-    parser.add_argument('-h', '--help', help=des)
     args = parser.parse_args()
 
     ignored_headers = args.ignored_headers.split(',')
