@@ -1,11 +1,29 @@
-import argparse
 import requests
 import logging
 import time
+from colorama import init, Fore
+import argparse
 
 logging.basicConfig(level=logging.INFO, format='%(message)s')
 
-def send_request(request, wordlist, ignored_headers, status_filter, size_filter, line_filter, delay, rate):
+init(autoreset=True)
+
+def colorize_status_code(status_code):
+    if status_code.startswith('2'):
+        return Fore.GREEN + status_code
+    elif status_code.startswith('3'):
+        return Fore.YELLOW + status_code
+    elif status_code.startswith('4'):
+        return Fore.RED + status_code
+    elif status_code.startswith('5'):
+        return Fore.MAGENTA + status_code
+    else:
+        return status_code
+
+def colorize_size_and_lines(size, lines):
+    return Fore.BLUE + f"size [{size}]   lines [{lines}]"
+
+def send_request(request, wordlist, ignored_headers, status_filter, size_filter, line_filter, delay, rate, print_time):
     with open(request, 'r') as req_file:
         request_data = req_file.read().splitlines()
 
@@ -14,32 +32,36 @@ def send_request(request, wordlist, ignored_headers, status_filter, size_filter,
 
     for word in words:
         for i, line in enumerate(request_data):
-            if i == 0:
-                modified_headers = []
-                for header in request_data[1:]:
-                    header_name, header_value = header.split(':', 1)
-                    header_name = header_name.strip()
-                    header_value = header_value.strip()
-                    if header_name not in ignored_headers:
-                        modified_header = f"{header_name}: {header_value} {word}"
-                        modified_headers.append(modified_header)
-                    else:
-                        modified_headers.append(header)
-                
-                logging.info('\n'.join(modified_headers))
-                modified_request = '\n'.join([request_data[0]] + modified_headers)
-                
+            if i == 0 or line.startswith("Host"):
+                continue
+            elif line.split(':', 1)[0].strip() in ignored_headers:
+                continue
+            else:
+                modified_headers = request_data[:]
+                header_name, header_value = line.split(':', 1)
+                modified_header = f"{header_name.strip()}: {header_value.strip()}{word}"  # Remove space here
+                modified_headers[i] = modified_header
+
+                logging.info(modified_headers[i])
+
+                modified_request = '\n'.join(modified_headers)
+
                 start_time = time.time()
                 response = requests.request('GET', 'https://target.com', headers={'Content-Type': 'text/plain'}, data=modified_request)
                 end_time = time.time()
 
-                if response.status_code not in status_filter and len(response.text) not in size_filter and len(response.text.splitlines()) not in line_filter:
-                    logging.info(f"status [{response.status_code}]\tsize [{len(response.text)}]\tlines [{len(response.text.splitlines())}]")
-                else:
-                    logging.info("Response filtered")
-                logging.info(f"Request took {end_time - start_time:.2f} seconds")
+                status_code = colorize_status_code(str(response.status_code))
+                size_and_lines = colorize_size_and_lines(len(response.text), len(response.text.splitlines()))
+
+                # Check if the response matches any filters
+                if response.status_code in status_filter or len(response.text) in size_filter or len(response.text.splitlines()) in line_filter:
+                    continue  # Skip printing the response if it's filtered
+
+                logging.info(f"status [{status_code}]\t{size_and_lines}")
+                if print_time:
+                    logging.info(f"Request took {end_time - start_time:.2f} seconds")
                 logging.info("\n")
-                
+
                 time.sleep(delay)
 
 def main():
@@ -51,7 +73,8 @@ def main():
     parser.add_argument('-fs', '--size_filter', help='Size filter (comma-separated)', default='')
     parser.add_argument('-fl', '--line_filter', help='Line number filter (comma-separated)', default='')
     parser.add_argument('-delay', '--delay', help='Delay between requests (in milliseconds)', type=int, default=0)
-    parser.add_argument('-rate', '--rate', help='Number of requests per second', type=int, default=1)
+    parser.add_argument('-rate', '--rate', help='Number of requests per second', type=int, default=10)
+    parser.add_argument('-time', '--print_time', help='Print request duration', action='store_true')
     args = parser.parse_args()
 
     ignored_headers = args.ignored_headers.split(',')
@@ -59,7 +82,7 @@ def main():
     size_filter = [int(size) for size in args.size_filter.split(',') if size]
     line_filter = [int(line) for line in args.line_filter.split(',') if line]
 
-    send_request(args.request, args.wordlist, ignored_headers, status_filter, size_filter, line_filter, args.delay / 1000, 1 / args.rate)
+    send_request(args.request, args.wordlist, ignored_headers, status_filter, size_filter, line_filter, args.delay / 1000, 1 / args.rate, args.print_time)
 
 if __name__ == "__main__":
     main()
