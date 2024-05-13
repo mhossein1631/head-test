@@ -1,4 +1,4 @@
-# HTTP Request Modification Tool
+# HTTP header fuzzer
 
 This is a Python script that allows you to add a charachter to end of headers one by one and send HTTP request with modified header to a target server (kind of like fuzzing). You can customize various aspects of the request such as headers, parameters, and request rate.
 
