@@ -69,7 +69,7 @@ def main():
     parser = argparse.ArgumentParser(description='HTTP request modification script')
     parser.add_argument('-r', '--request', help='Path to the request file', required=True)
     parser.add_argument('-w', '--wordlist', help='Path to the wordlist file', required=True)
-    parser.add_argument('-d', '--ignored_headers', help='Headers to be ignored (comma-separated)', required=True)
+    parser.add_argument('-d', '--ignored_headers', help='Headers to be ignored (comma-separated)')
     parser.add_argument('-fc', '--status_filter', help='Status code filter (comma-separated)', default='')
     parser.add_argument('-fs', '--size_filter', help='Size filter (comma-separated)', default='')
     parser.add_argument('-fl', '--line_filter', help='Line number filter (comma-separated)', default='')
